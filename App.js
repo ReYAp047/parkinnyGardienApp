@@ -3,7 +3,7 @@ import { Text, View, StyleSheet, Button } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from './Core/Config'
 
 
@@ -54,7 +54,7 @@ export default function App() {
     })();
   }, []);
 
-  const handleBarCodeScanned = ({ type, data }) => {
+  const handleBarCodeScanned = async  ({ type, data }) => {
     setScanned(true);
     
 
@@ -85,8 +85,21 @@ export default function App() {
    else
    {setPeriode("Nine")}
 
+   const q = query(collection(db, "Reservation"), where("ClientID", "==", data), where(periode, '==', true),where('Year', '==', year),where('Month', '==', month),where('Date', '==', date));
 
-    alert(`date ${date} month ${month} year ${year} time ${time} periode ${periode} `);
+   const querySnapshot =await getDocs(q);
+
+   if(querySnapshot){
+    querySnapshot.forEach((doc) => {
+      //console.log(doc.id, " => ", doc.data());
+      alert(`تصريح دخول ساري المفعول`);
+    });
+   }else {
+    alert(`False `);
+   }
+
+
+    
   };
 
   if (hasPermission === null) {
@@ -96,20 +109,6 @@ export default function App() {
     return <Text>No access to camera</Text>;
   }
 
-     
-
-  const Read = () =>{
-   
-
-    const q = query(collection(db, "Reservation"), where("ClientID", "==", data), where(periode, '==', True),where('Year', '==', year),where('Month', '==', month),where('Date', '==', date));
-
-    const querySnapshot = getDocs(q);
-
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, " => ", doc.data());
-    });
-  }
 
   return (
     <View style={styles.container}>
@@ -117,7 +116,7 @@ export default function App() {
         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
         style={StyleSheet.absoluteFillObject}
       />
-      {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
+      {scanned && <Button title={'انقر للمسح مرة أخرى'} onPress={() => setScanned(false)} />}
     </View>
   );
 }
